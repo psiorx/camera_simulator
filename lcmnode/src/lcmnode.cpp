@@ -14,9 +14,7 @@ int main() {
     cerr << "couldn't initialize LCM" << endl;
     return 1;
   }
-
-  TCPImageServer image_server("localhost", "12345");
-
+  TCPImageServer image_server("localhost", "12345", true);
   image_server.wait_connect();
 
   while (image_server.good()) {

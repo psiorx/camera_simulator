@@ -28,11 +28,12 @@ class TCPImageServer {
     libsocket::selectset<libsocket::inet_stream_server> m_server_set;
     libsocket::selectset<libsocket::inet_stream_server>::ready_socks m_readypair;
     bool m_good;
-
+    bool m_flip;
     int read_int();
     ImageData read_image(const int width, const int height);
+    ImageData flip_image(ImageData const& img);
 public:
-    TCPImageServer(std::string const& host, std::string const& port);
+    TCPImageServer(std::string const& host, std::string const& port, const bool flip_image = false);
     virtual ~TCPImageServer();
     void wait_connect();
     bool good();

@@ -11,8 +11,8 @@
 using namespace std;
 using namespace libsocket;
 
-TCPImageServer::TCPImageServer(string const &host, string const &port)
-  : m_good(false), m_host(host), m_port(port), m_server(host, port, LIBSOCKET_IPv4)
+TCPImageServer::TCPImageServer(string const &host, string const &port, const bool flip_image)
+  :m_flip(flip_image), m_good(false), m_host(host), m_port(port), m_server(host, port, LIBSOCKET_IPv4)
 {
   m_server_set.add_fd(m_server, LIBSOCKET_READ);
   m_server_stream = nullptr;
@@ -33,7 +33,7 @@ ImageData TCPImageServer::get_image() {
   try {
     int width = read_int();
     int height = read_int();
-    return read_image(width, height);
+    return m_flip ? flip_image(read_image(width, height)) : read_image(width, height);
   } catch (const socket_exception& ex) {
     cerr << ex.mesg << endl;
     shutdown();
@@ -89,4 +89,16 @@ TCPImageServer::~TCPImageServer() {
 
 bool TCPImageServer::good() {
   return m_good;
+}
+
+ImageData TCPImageServer::flip_image(ImageData const &img) {
+  const int stride = img.width * BYTES_PER_PIXEL;
+  ImageData flipped_image;
+  flipped_image.width = img.width;
+  flipped_image.height = img.height;
+  flipped_image.data = new uint8_t[img.height * stride];
+  for(int row = 0; row < img.height ; row++) {
+    memcpy(flipped_image.data + row * stride, img.data + (img.height - row - 1) * stride, stride);
+  }
+  return flipped_image;
 }
