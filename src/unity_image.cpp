@@ -7,10 +7,8 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  
-  ros::init(argc, argv, "unity_image");
+  ros::init(argc, argv, "unity_image_server");
   ros::NodeHandle n;
-//  ros::Publisher image_pub = n.advertise<sensor_msgs::Image>("unity_image_topic", 1000);
   image_transport::ImageTransport img_trans(n);
   image_transport::Publisher image_pub = img_trans.advertise("unity/image", 10);
 
@@ -32,7 +30,5 @@ int main(int argc, char **argv)
     image_pub.publish(img_msg);
     ros::spinOnce();
   }
-
-
   return 0;
 }
