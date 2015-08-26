@@ -14,6 +14,7 @@ int main() {
     cerr << "couldn't initialize LCM" << endl;
     return 1;
   }
+
   TCPImageServer image_server("localhost", "12345", true);
   image_server.wait_connect();
 
@@ -27,7 +28,7 @@ int main() {
     image_msg.pixelformat = BOT_CORE_IMAGE_T_PIXEL_FORMAT_RGB;
     image_msg.row_stride = img.width * 3;
     image_msg.size = image_msg.row_stride * img.height;
-    image_msg.data = img.data;
+    image_msg.data = img.data.get();
     bot_core_image_t_publish(lcm, "unity_image", &image_msg);
   }
 

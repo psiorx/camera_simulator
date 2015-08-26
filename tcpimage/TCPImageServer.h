@@ -5,18 +5,13 @@
 #include <stdint.h>
 #include <libsocket/inetserverstream.hpp>
 #include <libsocket/select.hpp>
+#include <memory>
 #include <iostream>
 
 struct ImageData{
     int width = 0;
     int height = 0;
-    uint8_t *data = nullptr;
-    ~ImageData() {
-        if(data != nullptr) {
-            delete []  data;
-            data = nullptr;
-        }
-    }
+    std::shared_ptr<uint8_t> data;
 };
 
 class TCPImageServer {
@@ -32,6 +27,7 @@ class TCPImageServer {
     int read_int();
     ImageData read_image(const int width, const int height);
     ImageData flip_image(ImageData const& img);
+
 public:
     TCPImageServer(std::string const& host, std::string const& port, const bool flip_image = false);
     virtual ~TCPImageServer();

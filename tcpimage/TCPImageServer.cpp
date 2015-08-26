@@ -30,14 +30,16 @@ void TCPImageServer::wait_connect() {
 
 ImageData TCPImageServer::get_image() {
 
+  ImageData img;
   try {
     int width = read_int();
     int height = read_int();
-    return m_flip ? flip_image(read_image(width, height)) : read_image(width, height);
+    img = m_flip ? flip_image(read_image(width, height)) : read_image(width, height);
   } catch (const socket_exception& ex) {
     cerr << ex.mesg << endl;
     shutdown();
   }
+  return img;
 }
 
 int TCPImageServer::read_int() {
@@ -49,7 +51,7 @@ int TCPImageServer::read_int() {
   }
 
   if(bytes_received != 4) {
-    throw socket_exception("TCPImageServer", 49 , "Failed to read int from server stream");
+    throw socket_exception("TCPImageServer", 54 , "Failed to read int from server stream");
   }
 
   return value;
@@ -61,18 +63,18 @@ ImageData TCPImageServer::read_image(const int width, const int height) {
   img.height = height;
   int data_remaining = width * height * BYTES_PER_PIXEL;
   int current_offset = 0;
-
+  size_t bytes_received = 0;
   if (m_server_stream != nullptr) {
-    img.data = new uint8_t[data_remaining];
+    img.data = shared_ptr<uint8_t>(new uint8_t[data_remaining], default_delete<uint8_t[]>());
     while (data_remaining > 0) {
-      size_t bytes_received = m_server_stream->rcv(img.data + current_offset, min(data_remaining, CHUNK_SIZE), 0);
+      bytes_received = m_server_stream->rcv(img.data.get() + current_offset, min(data_remaining, CHUNK_SIZE), 0);
       data_remaining -= bytes_received;
       current_offset += bytes_received;
     }
   }
 
   if(data_remaining != 0) {
-    throw socket_exception("TCPImageServer", 64, "Failed to read image data from server stream");
+    throw socket_exception("TCPImageServer", 77, "Failed to read image data from server stream");
   }
 
   return img;
@@ -96,9 +98,10 @@ ImageData TCPImageServer::flip_image(ImageData const &img) {
   ImageData flipped_image;
   flipped_image.width = img.width;
   flipped_image.height = img.height;
-  flipped_image.data = new uint8_t[img.height * stride];
+  flipped_image.data = shared_ptr<uint8_t>(new uint8_t[img.height * stride], default_delete<uint8_t[]>());
+
   for(int row = 0; row < img.height ; row++) {
-    memcpy(flipped_image.data + row * stride, img.data + (img.height - row - 1) * stride, stride);
+    memcpy(flipped_image.data.get() + row * stride, img.data.get() + (img.height - row - 1) * stride, stride);
   }
   return flipped_image;
 }
